@@ -1,0 +1,2 @@
+com.rebuild.ex.module1.client.Module1
+com.rebuild.ex.module2.client.Module2
