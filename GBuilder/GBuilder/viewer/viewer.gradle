@@ -1,0 +1,18 @@
+import net.ocie.javaone2015.build.fx.*;
+import org.gradle.api.GradleException;
+
+apply plugin: 'java'
+
+task validate(description: 'Validate Build User') {
+	doFirst {
+		def fxmlURL = BuildValidationController.class.getResource("buildvalidation.fxml")
+		def styleURL = BuildValidationController.class.getResource("buildvalidation.css")
+		def window = new FXPanelFrame<String, String>("", fxmlURL, styleURL);
+		window.setExtraProperty("title", "Enter the windows keystore password");
+		window.show();
+		def val = window.getReturnValue();
+		if (val == null) {
+			throw new GradleException("Build canceled by user")
+		}		
+	}
+}
