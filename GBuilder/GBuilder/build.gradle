@@ -7,12 +7,68 @@ if (privateFile.exists()) {
 	apply from: 'private.gradle'
 }
 
-ext.myProjectBase = new File(projectDir,'..').canonicalFile.absolutePath
+ext.myProjectBase = new File(projectDir,'../..').canonicalFile.absolutePath
 
 if (!hasProperty('distributionBase')) {
 	ext.distributionBase = new File(projectDir,'dist').canonicalFile.absolutePath
 }
+ext.isReleaseBuild = "true".equals(isReleaseBuildText.toLowerCase())
+ext.resourcesDir = new File(projectDir,'resources')
+
+apply from: 'lib-def.gradle'
+if (!hasProperty('buildDate')) {
+	ext.buildDate = new Date().format('MM/dd/yyyy HH:mm:ss')
+}
 
 logger.quiet "Base = ${distributionBase}"
 
-//Modification
+subprojects {
+//	ext.distBaseDir = new File(projectDir,'dist')
+//	ext.distPublishBaseDir = new File(distBaseDir,'publish')
+//	ext.distNonPublishBaseDir = new File(distBaseDir,'non-publish')
+//	ext.distCatalinaBaseDir = new File(distPublishBaseDir,'catalina_base')
+//	ext.distWebappBaseDir = new File(distCatalinaBaseDir,'webapps')
+	
+	tasks.withType(JavaCompile) {
+		options.incremental = true
+		options.warnings = false
+		options.deprecation = false
+		options.fork = true;
+		options.forkOptions.with {
+			memoryMaximumSize = "512M"
+		}
+		excludes += ['dsi/branding/resources/custom/**']
+	}
+	tasks.withType(Jar) {
+		metaInf {
+			from (resourcesDir) {
+				include 'VERSION-INFO.txt'
+			}
+		}
+		manifest {
+			attributes (
+				'ReleaseBuild': isReleaseBuild,
+			)
+		}
+		doFirst {
+			//Doing this prevents a change in the build date from invalidating the jar file and triggering a rebuild
+			manifest.attributes ('BuildDate': buildDate)
+		}
+	}
+	afterEvaluate( { Project proj ->
+			if (!proj.tasks.matching( {it.name == 'createDist'}).empty) {
+				if (proj.tasks.matching( {it.name == 'copyToDistribution'}).empty) {
+					proj.task([type: Copy, group : 'Distribution',dependsOn: ':'+proj.name + ':createDist'],"copyToDistribution") {
+						destinationDir = distributionBaseDir
+						from (proj.distBaseDir)
+					}
+				}
+				rootProject.tasks['createDist'].dependsOn += proj.tasks['copyToDistribution']
+			}
+		})
+}
+
+project(':viewer') {
+	apply plugin: 'java'
+	ext.projectBase=myProjectBase+'/Viewer/Viewer'
+}

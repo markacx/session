@@ -1,3 +1,5 @@
 /GBuilder/Builder/.nb-gradle/
 /GBuilder/GBuilder/.nb-gradle/
 /Viewer/Viewer/nbproject/private/
+/GBuilder/GBuilder/buildSrc/build/
+/GBuilder/GBuilder/viewer/build/
