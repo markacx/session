@@ -6,3 +6,12 @@ File privateFile = new File(projectDir,'private.gradle')
 if (privateFile.exists()) {
 	apply from: 'private.gradle'
 }
+
+ext.myProjectBase = new File(projectDir,'..').canonicalFile.absolutePath
+
+if (!hasProperty('distributionBase')) {
+	ext.distributionBase = new File(projectDir,'dist').canonicalFile.absolutePath
+}
+
+logger.quiet "Base = ${distributionBase}"
+ext.jreName="jre$jreVersion"
