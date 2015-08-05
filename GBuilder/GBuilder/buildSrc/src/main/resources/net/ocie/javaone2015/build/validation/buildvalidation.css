@@ -1,0 +1,11 @@
+/*
+ * Empty Stylesheet file.
+ */
+
+.invalidTextField {
+	-fx-border-color: red;
+	-fx-border-width: 2px;
+}
+/*.invalidTextField:textFieldValid  {
+	-fx-border-color:green;
+}*/

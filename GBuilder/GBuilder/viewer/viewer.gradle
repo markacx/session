@@ -1,7 +1,9 @@
-import net.ocie.javaone2015.build.fx.*;
-import org.gradle.api.GradleException;
+import net.ocie.javaone2015.build.fx.*
+import net.ocie.javaone2015.build.validation.*
+import org.gradle.api.GradleException
 
 apply plugin: 'java'
+
 
 task validate(description: 'Validate Build User') {
 	doFirst {
