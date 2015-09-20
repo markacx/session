@@ -24,10 +24,6 @@ logger.quiet "Base = ${distributionBase}"
 
 subprojects {
 //	ext.distBaseDir = new File(projectDir,'dist')
-//	ext.distPublishBaseDir = new File(distBaseDir,'publish')
-//	ext.distNonPublishBaseDir = new File(distBaseDir,'non-publish')
-//	ext.distCatalinaBaseDir = new File(distPublishBaseDir,'catalina_base')
-//	ext.distWebappBaseDir = new File(distCatalinaBaseDir,'webapps')
 	
 	tasks.withType(JavaCompile) {
 		options.incremental = true
@@ -37,7 +33,6 @@ subprojects {
 		options.forkOptions.with {
 			memoryMaximumSize = "512M"
 		}
-		excludes += ['dsi/branding/resources/custom/**']
 	}
 	tasks.withType(Jar) {
 		metaInf {

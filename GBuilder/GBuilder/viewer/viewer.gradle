@@ -18,40 +18,16 @@ task validate(description: 'Validate Build User') {
 	}
 }
 task init (description: 'Create client sub jar tasks') {
-//	createTask('annotation',['dsi/ext/annotation/**'])
-//	createTask('attachment',['dsi/ext/attachment/**'])
-//	createTask('clientadmin',['dsi/ext/clientadmin/**'])
-//	createTask('collate',['dsi/ext/collate/**'])
-//	createTask('cutoffadmin',['dsi/ext/cutoffadmin/**'])
-//	createTask('datamining',['dsi/ext/datamining1/**'])
-//	createTask('datastore',['dsi/ext/datastore/**','dsi/ext/query/**'])
-//	createTask('document',['dsi/ext/document/**','dsi/ext/document2/**','dsi/ext/storage/**','dsi/ext/search/**'])
-//	createTask('documentadmin',['dsi/ext/documentadmin/**'])
-//	createTask('editing',['dsi/ext/editing/**'])
-//	createTask('foldering',['dsi/ext/foldering2/**'])
-//	createTask('helpdesk',['dsi/ext/helpdesk/**'])
-//	createTask('indexer',['dsi/ext/indexer/**'])
-//	createTask('infidelity',['dsi/ext/infidelity/**'])
-//	createTask('iv',['dsi/ext/iv/**'])
-//	createTask('ivadmin',['dsi/ext/ivadmin/**'])
-//	createTask('labeladmin',['dsi/ext/labeladmin/**'])
-//	createTask('overlay',['dsi/ext/overlay/**'])
-//	createTask('piv',['dsi/ext/piv/**'])
-//	createTask('posting',['dsi/ext/posting/**'])
-//	createTask('postingadmin',['dsi/ext/postingadmin/**'])
-//	createTask('recon',['dsi/ext/recon/**'])
-//	createTask('schemeadmin',['dsi/ext/schemeadmin/**'])
-//	createTask('search',['dsi/ext/search/**'])
-//	createTask('securityadmin',['dsi/ext/securityadmin/**'])
-//	createTask('taskmanager',['dsi/ext/taskmanager2/**'])
-//	createTask('textviewer',['dsi/ext/textviewer/**'])
-//	createTask('totd',['dsi/ext/totd/**'])
-//	createTask('vista',['dsi/ext/vista/**'])
-//	createTask('vistaadmin',['dsi/ext/vistaadmin/**'])
+	createTask('Module 1',['com/rebuild/ext/module1/**'])
+	createTask('Module 2',['com/rebuild/ext/module2/**'])
+	createTask('Module 3',['com/rebuild/ext/module3/**'])
+	createTask('Module 4',['com/rebuild/ext/module4/**'])
+	createTask('Module 5',['com/rebuild/ext/module5/**'])
+
 
 	tasks.each( {
 			logger.info("Examining task " + it)
-			if (it.group == 'server_sub_jar') {
+			if (it.group == 'client_sub_jar') {
 				jar.dependsOn = jar.dependsOn + it 
 				logger.info("Adding" + it)
 			}
@@ -61,52 +37,25 @@ task init (description: 'Create client sub jar tasks') {
 compileJava {
 	println "$projectBase/src"
 	source "$projectBase/src"
-	include 'dsi/branding/**/*.java'
-	include 'dsi/app/javaViewer/**/*.java'
-	include 'dsi/client/**/*.java'
-	include 'dsi/core/**/*.java'
-	include 'dsi/joint/**/*.java'
-	
-	include 'dsi/system/*/core/**/*.java'
-	include 'dsi/system/*/client/**/*.java'
-	include 'dsi/system/*/joint/**/*.java'
-	
-	include 'dsi/ext/*/core/**/*.java'
-	include 'dsi/ext/*/client/**/*.java'
-	include 'dsi/ext/*/joint/**/*.java'
+	include '**/*.java'
 }
 processResources {
 	from "$projectBase/src"
 
-	include 'dsi/branding/**'
-	include 'dsi/app/javaViewer/**'
-	include 'dsi/client/**'
-	include 'dsi/core/**'
-	include 'dsi/joint/**'
-	
-	include 'dsi/system/*/core/**'
-	include 'dsi/system/*/client/**'
-	include 'dsi/system/*/joint/**'
-	
-	include 'dsi/ext/*/core/**'
-	include 'dsi/ext/*/client/**'
-	include 'dsi/ext/*/joint/**'
-	
-	exclude 'dsi/branding/resources/cornericon-512x512.png'
-	exclude 'dsi/branding/resources/cornericon-1024x1024.png'
 	exclude '**/*.java'
-
 }
 jar {
-	archiveName = 'clientC.jar'
+	archiveName = 'MyApp.jar'
 	exclude 'dsi/ext/**'
 }
 public void createTask(archive,dirs) {
 	task([type: Jar, group : 'client_sub_jar', dependsOn:"compileJava"],"create_" + archive) {
 		//Not sure why, but it is necessary to include the source set
+		println "FROM: " +sourceSets.main.output
 		from sourceSets.main.output
 
 		includes = dirs
+		includes.each( { println it})
 		archiveName ="${archive}C.jar"
 		artifacts {
 			archives file: new File(buildDir,archiveName), name: archive, type: 'jar', classifier: 'extra'
