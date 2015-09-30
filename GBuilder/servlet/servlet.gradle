@@ -1,0 +1,53 @@
+import net.ocie.javaone2015.build.fx.*
+import net.ocie.javaone2015.build.validation.*
+import org.gradle.api.GradleException
+
+apply plugin: 'java'
+
+
+task init (description: 'Create client sub jar tasks') {
+	createTask('Module 1',['com/rebuild/ext/module1/**'])
+	createTask('Module 2',['com/rebuild/ext/module2/**'])
+	createTask('Module 3',['com/rebuild/ext/module3/**'])
+	createTask('Module 4',['com/rebuild/ext/module4/**'])
+	createTask('Module 5',['com/rebuild/ext/module5/**'])
+
+
+	tasks.each( {
+			logger.info("Examining task " + it)
+			if (it.group == 'client_sub_jar') {
+				jar.dependsOn = jar.dependsOn + it 
+				logger.info("Adding" + it)
+			}
+		}
+	)
+}
+compileJava {
+	println "$projectBase/src"
+	source "$projectBase/src"
+	include '**/*.java'
+}
+processResources {
+	from "$projectBase/src"
+
+	exclude '**/*.java'
+}
+jar {
+	archiveName = 'MyApp.jar'
+	exclude 'dsi/ext/**'
+}
+public void createTask(archive,dirs) {
+	task([type: Jar, group : 'client_sub_jar', dependsOn:"compileJava"],"create_" + archive) {
+		//Not sure why, but it is necessary to include the source set
+		println "FROM: " +sourceSets.main.output
+		from sourceSets.main.output
+
+		includes = dirs
+		includes.each( { println it})
+		archiveName ="${archive}C.jar"
+		artifacts {
+			archives file: new File(buildDir,archiveName), name: archive, type: 'jar', classifier: 'extra'
+		}
+	}
+	tasks.jar.dependsOn += "create_" + archive
+}

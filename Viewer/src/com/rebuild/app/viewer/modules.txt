@@ -1,0 +1,5 @@
+com.rebuild.ex.module1.client.Module1
+com.rebuild.ex.module2.client.Module2
+com.rebuild.ex.module2.client.Module3
+com.rebuild.ex.module2.client.Module4
+com.rebuild.ex.module2.client.Module5

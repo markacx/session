@@ -1,0 +1,18 @@
+task setupLibs {
+	File libBase = new File(myProjectBase,"GBuilder/resources/libs").absoluteFile
+
+	project.ext.libraries = [
+
+		Tomcat : files(
+			new File(libBase,"tomcat/catalina.jar"),
+			new File(libBase,"tomcat/servlet-api.jar")
+		),
+		JSP : files(
+			new File(libBase,"jsp/jstl-api.jar"),
+			new File(libBase,"jsp/jstl-impl.jar")
+		),
+		JDBC : files(new File(libBase,"jdbc/mysql-connector-java-5.1.6-bin.jar")),
+		Mail : files(new File(libBase,"mail.jar")),
+	]
+}
+

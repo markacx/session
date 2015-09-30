@@ -1,0 +1,114 @@
+import net.ocie.javaone2015.build.fx.*
+import net.ocie.javaone2015.build.validation.*
+import org.gradle.api.GradleException
+
+apply plugin: 'java'
+
+task validate(description: 'Validate Build User') {
+	doFirst {
+		def fxmlURL = BuildValidationController.class.getResource("buildvalidation.fxml")
+		def styleURL = BuildValidationController.class.getResource("buildvalidation.css")
+		def window = new FXPanelFrame<String, String>("", fxmlURL, styleURL);
+		window.setExtraProperty("title", "Enter the windows keystore password");
+		window.show();
+		def val = window.getReturnValue();
+		if (val == null) {
+			throw new GradleException("Build canceled by user")
+		}		
+	}
+}
+task init_distribution << {
+	mkdir "dist"
+}
+task init_client (description: 'Create client sub jar tasks') {
+	createClientTask('Module1',['com/rebuild/ext/module1/**'])
+	createClientTask('Module2',['com/rebuild/ext/module2/**'])
+	createClientTask('Module3',['com/rebuild/ext/module3/**'])
+	createClientTask('Module4',['com/rebuild/ext/module4/**'])
+	createClientTask('Module5',['com/rebuild/ext/module5/**'])
+
+	tasks.each( {
+			logger.info("Examining task " + it)
+			if (it.group == 'client_sub_jar') {
+				jar.dependsOn = jar.dependsOn + it 
+				logger.info("Adding" + it)
+			}
+		}
+	)
+}
+task init_server (description: 'Create server sub jar tasks') {
+	createServerTask('Module1',['com/rebuild/ext/module1/**'])
+	createServerTask('Module2',['com/rebuild/ext/module2/**'])
+	createServerTask('Module3',['com/rebuild/ext/module3/**'])
+	createServerTask('Module4',['com/rebuild/ext/module4/**'])
+	createServerTask('Module5',['com/rebuild/ext/module5/**'])
+
+	tasks.each( {
+			logger.info("Examining task " + it)
+			if (it.group == 'server_sub_jar') {
+				jar.dependsOn = jar.dependsOn + it 
+				logger.info("Adding" + it)
+			}
+		}
+	)
+}
+compileJava {
+	println "$projectBase/src"
+	source "$projectBase/src"
+	include '**/*.java'
+}
+processResources {
+	from "$projectBase/src"
+
+	exclude '**/*.java'
+}
+jar {
+	archiveName = 'MyApp.jar'
+	exclude 'dsi/ext/**'
+}
+task makePackage (description : 'Put files in zip file', type: Zip, dependsOn: jar) {
+	archiveName = "package.zip"
+	def subTasks = tasks.matching( { task -> task.group == 'client_sub_jar' } )
+	from (subTasks)
+}
+task rePackage_bad (description : 'Do something to the zip file', dependsOn: [makePackage, init_distribution]) << {
+	def org = makePackage.outputs.getFiles()[0];
+	org.renameTo(new File("dist"))
+} 
+task rePackage_good (type : Copy, description : 'Do something to the zip file', dependsOn: [makePackage, init_distribution]) << {
+	from makePackage.outputs
+	into new File("dist")
+} 
+task build (dependsOn: rePackage_good) {
+	
+}
+public void createClientTask(archive,dirs) {
+	task([type: Jar, group : 'client_sub_jar', dependsOn:"compileJava"],"create_viewer_" + archive) {
+		//Not sure why, but it is necessary to include the source set
+		from sourceSets.main.output
+
+		includes = dirs
+		includes.each( { println it})
+		exclude "**/server/**"
+		archiveName ="${archive}C.jar"
+		artifacts {
+			archives file: new File(buildDir,archiveName), name: archive, type: 'jar', classifier: 'extra'
+		}
+	}
+	tasks.jar.dependsOn += "create_viewer_" + archive
+}
+public void createServerTask(archive,dirs) {
+	task([type: Jar, group : 'server_sub_jar', dependsOn:"compileJava"],"create_server_" + archive) {
+		//Not sure why, but it is necessary to include the source set
+		from sourceSets.main.output
+
+		includes = dirs
+		exclude "**/client/**"
+		includes.each( { println it})
+		archiveName ="${archive}S.jar"
+		artifacts {
+			archives file: new File(buildDir,archiveName), name: archive, type: 'jar', classifier: 'extra'
+		}
+	}
+	tasks.jar.dependsOn += "create_server_" + archive
+}
