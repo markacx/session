@@ -13,24 +13,27 @@ import javafx.scene.Scene;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 /**
  *
- * @author ocJLFoster
- * @param <T>
+ * @author Mark Claassen, Joseph Foster
+ * @param <T> initial value
+ * @param <V> return value
  */
 public class FXPanelFrame<T, V> {
+	//anchoring frame
 	private final JFrame frame = new JFrame();
+	//dialog that will hold our FXML generated content
 	private final JDialog dialog = new JDialog(frame);
-	private JFXPanel stupid = new JFXPanel();
+	//this JFXPanel is stupid because it's purpose is to initialize the framework early enough for gradle
+	//to be able to call UI methods.
+	private final static JFXPanel ONLY_TO_INIT_PLATFORM = new JFXPanel();
+	//configuration object
 	private final T initialVal;
+	//URLs to load the FXML layout, and the stylesheet
 	private final URL fxmlURL, styleURL;
 	private SwingStageDesignate<T, V> designate;
-	private Map<Object, Object> extraProperties = new HashMap<>();
+	private final Map<Object, Object> extraProperties = new HashMap<>();
+	
 	public FXPanelFrame(T initialVal, URL fxmlURL, URL styleURL) {
 		this.initialVal = initialVal;
 		this.fxmlURL = fxmlURL;
@@ -82,9 +85,6 @@ public class FXPanelFrame<T, V> {
 		}
 	}
 	public void close() {
-//		dialog.setVisible(false);
-//		dialog.dispose();
-//		frame.dispose();
 		frame.setVisible(false);
 	}
 	public void setExtraProperty(Object key, Object val) {

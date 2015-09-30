@@ -6,13 +6,21 @@ apply plugin: 'java'
 
 task validate(description: 'Validate Build User') {
 	doFirst {
+		//this will open a SSH configuration dialog, in Pure JavaFX.
+		//beacause Platform.exit() is the only way to return to the Gradle context
+		//we cannot open further javafx dialogs.
+		//uncomment out the below line to see this behavior
+		//def pureFXConfigOutput = PureFXGetSSHInfo.openWindow("This is the initial config");
+		
+		//this limitation led us to develop a Swing wrapper for our JavaFX layout
 		def fxmlURL = BuildValidationController.class.getResource("buildvalidation.fxml")
 		def styleURL = BuildValidationController.class.getResource("buildvalidation.css")
-		def window = new FXPanelFrame<String, String>("", fxmlURL, styleURL);
+		//we will pass in a string configuration object, and expect a ValidationResponse back
+		def window = new FXPanelFrame<String, ValidationResponse>("Validation Config String", fxmlURL, styleURL);
 		window.setExtraProperty("title", "Enter the windows keystore password");
 		window.show();
 		def val = window.getReturnValue();
-		if (val == null) {
+		if (!val.isValid()) {
 			throw new GradleException("Build canceled by user")
 		}		
 	}
@@ -79,7 +87,7 @@ task rePackage_good (type : Copy, description : 'Do something to the zip file', 
 	from makePackage.outputs
 	into new File("dist")
 } 
-task build (dependsOn: rePackage_good) {
+task build2 (dependsOn: rePackage_good) {
 	
 }
 public void createClientTask(archive,dirs) {

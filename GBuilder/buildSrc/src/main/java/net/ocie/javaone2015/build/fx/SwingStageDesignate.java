@@ -4,25 +4,21 @@ import java.util.Map;
 import javafx.stage.Window;
 import javax.swing.SwingUtilities;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 /**
  *
- * @author ocJLFoster
- * @param <T>
+ * @author Mark Claassen, Joseph Foster
+ * @param <T> initial value
+ * @param <V> return value
  */
 public class SwingStageDesignate<T, V> {
 	private V returnValue;
 	private final T initialValue;
 	private Window fxOwner;
-	private final FXPanelFrame frameThing;
+	private final FXPanelFrame<T, V> panelFrame;
 	private final Map<Object, Object> extraProperties;
-	public SwingStageDesignate(T initialValue, FXPanelFrame frameThing, Map<Object, Object> extraProperties) {
+	public SwingStageDesignate(T initialValue, FXPanelFrame<T, V> panelFrame, Map<Object, Object> extraProperties) {
 		this.initialValue = initialValue;
-		this.frameThing = frameThing;
+		this.panelFrame = panelFrame;
 		this.extraProperties = extraProperties;
 	}
 	public void setReturnValue(V t) {
@@ -38,7 +34,7 @@ public class SwingStageDesignate<T, V> {
 		return fxOwner;
 	}
 	public void close() {
-		SwingUtilities.invokeLater(frameThing::close);
+		SwingUtilities.invokeLater(panelFrame::close);
 	}
 	public Object getExtraProperty(Object key) {
 		return extraProperties.get(key);

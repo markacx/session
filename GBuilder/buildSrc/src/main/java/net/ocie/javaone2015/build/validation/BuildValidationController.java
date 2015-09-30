@@ -1,5 +1,6 @@
 package net.ocie.javaone2015.build.validation;
 
+import com.sun.javafx.application.PlatformImpl;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.beans.binding.Bindings;
@@ -15,16 +16,11 @@ import javafx.scene.control.PasswordField;
 import javafx.scene.input.KeyEvent;
 import net.ocie.javaone2015.build.fx.*;
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 /**
  *
  * @author ocJLFoster
  */
-public class BuildValidationController implements Initializable, FXPanelController<String,String> {
+public class BuildValidationController implements Initializable, FXPanelController<String,ValidationResponse> {
 	@FXML
 	private Label titleLabel;
 	@FXML
@@ -36,11 +32,12 @@ public class BuildValidationController implements Initializable, FXPanelControll
 	@FXML
 	private Button cancelButton;
 
-	private SwingStageDesignate<String, String> designate;
+	private SwingStageDesignate<String, ValidationResponse> designate;
 	private BooleanBinding passwordValidBinding;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		PlatformImpl.setImplicitExit(false);	
 		applyValidation(passwordField, false);
 		applyValidation(reentryField, false);
 		passwordValidBinding = Bindings.createBooleanBinding(() -> {
@@ -55,19 +52,20 @@ public class BuildValidationController implements Initializable, FXPanelControll
 		});
 	}
 	@Override
-	public void setDesignate(SwingStageDesignate<String, String> designate) {
+	public void setDesignate(SwingStageDesignate<String, ValidationResponse> designate) {
 		this.designate = designate;
 		titleLabel.setText((String) designate.getExtraProperty("title"));
 	}
 	@FXML
 	void ok(ActionEvent event) {
 		if (!okButton.isDisabled()) {
-			designate.setReturnValue(passwordField.getText());
+			designate.setReturnValue(ValidationResponse.createValid(passwordField.getText()));
 			designate.close();
 		}
 	}
 	@FXML
 	void cancel(ActionEvent event) {
+		designate.setReturnValue(ValidationResponse.createInvalid());
 		designate.close();
 	}
 	@FXML
@@ -85,18 +83,12 @@ public class BuildValidationController implements Initializable, FXPanelControll
 //		});
 
 	}
-//	private void validate() {
-//		String password = passwordField.getText();
-//		String reentry = reentryField.getText();
-//		
-//		boolean passwordValid = password != null && !password.isEmpty() && reentry != null && password.equals(reentry);
-//		
-//		applyValidation(passwordField, passwordValid);
-//		applyValidation(reentryField, passwordValid);
-//	}
+	/**
+	 * Modifies the style classes of the node to show input validity
+	 * @param node item to apply validation to
+	 * @param valid validity to be applied
+	 */
 	private void applyValidation(Node node, boolean valid) {
-//		if (!node.getStyleClass().contains("invalidTextField"))
-//			node.getStyleClass().add("invalidTextField");
 		if (valid) {
 			if (node.getStyleClass().contains("invalidTextField"))
 				node.getStyleClass().remove("invalidTextField");
