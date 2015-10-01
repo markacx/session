@@ -4,6 +4,8 @@ import org.gradle.api.GradleException
 
 apply plugin: 'java'
 
+ext.distDir = new File("dist")
+
 task validate(description: 'Validate Build User') {
 	doFirst {
 		//this will open a SSH configuration dialog, in Pure JavaFX.
@@ -26,8 +28,9 @@ task validate(description: 'Validate Build User') {
 	}
 }
 task init_distribution << {
-	mkdir "dist"
+	distDir.mkdir()
 }
+
 task init_client (description: 'Create client sub jar tasks') {
 	createClientTask('Module1',['com/rebuild/ext/module1/**'])
 	createClientTask('Module2',['com/rebuild/ext/module2/**'])
@@ -74,22 +77,40 @@ jar {
 	archiveName = 'MyApp.jar'
 	exclude 'dsi/ext/**'
 }
-task makePackage (description : 'Put files in zip file', type: Zip, dependsOn: jar) {
+task makePackage (description : 'Put files in zip file', type: Zip, dependsOn: [jar,init_distribution]) {
 	archiveName = "package.zip"
 	def subTasks = tasks.matching( { task -> task.group == 'client_sub_jar' } )
 	from (subTasks)
 }
-task rePackage_bad (description : 'Do something to the zip file', dependsOn: [makePackage, init_distribution]) << {
+task rePackage_bad (description : 'Do something to the zip file', dependsOn: [makePackage]) << {
 	def org = makePackage.outputs.getFiles()[0];
-	org.renameTo(new File("dist"))
+	org.renameTo(distDir)
 } 
-task rePackage_good (type : Copy, description : 'Do something to the zip file', dependsOn: [makePackage, init_distribution]) << {
+task rePackage_good (type : Copy, description : 'Do something to the zip file', dependsOn: [makePackage]) << {
 	from makePackage.outputs
-	into new File("dist")
+	into distDir
 } 
-task build2 (dependsOn: rePackage_good) {
+task execJava (type: Exec, dependsOn : rePackage_good) {
+	def file = new File(distDir,"version.txt").absoluteFile;
+
+	executable = System.getProperty("java.home") + "/bin/java.exe"
+	//The arguments are considered part of the "inputs"  Add them explicitly if a change in them should re-run the task
+	inputs.property('executable',executable)
+
+	args "-version"
+	//The arguments are considered part of the "inputs"  Add them explicitly if a change in them should re-run the task
+	inputs.property('args',args)
+	errorOutput = new ByteArrayOutputStream()
+	doLast {
+		file.text = errorOutput.toString()
+	}
+	//Without setting an output, the task not have any output and so will run every time
+	outputs.file(file)
+}
+task doBuild (dependsOn: execJava) {
 	
 }
+
 public void createClientTask(archive,dirs) {
 	task([type: Jar, group : 'client_sub_jar', dependsOn:"compileJava"],"create_viewer_" + archive) {
 		//Not sure why, but it is necessary to include the source set

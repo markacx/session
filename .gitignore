@@ -16,3 +16,4 @@
 /GBuilder/.gradle/
 /GBuilder/buildSrc/build/
 /Viewer/nbproject/private/
+/GBuilder/dist/
