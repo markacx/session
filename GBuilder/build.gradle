@@ -23,7 +23,11 @@ if (!hasProperty('buildDate')) {
 logger.quiet "Base = ${distributionBase}"
 
 subprojects {
-	ext.distBaseDir = new File(projectDir,'dist')
+	ext.distDir = new File(projectDir,'dist')
+	ext.resourceDir = resourcesDir
+	
+	println "BASE: " + distDir
+	println "resourceDir: " + resourceDir
 	
 	tasks.withType(JavaCompile) {
 		options.incremental = true

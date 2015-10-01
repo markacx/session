@@ -4,7 +4,6 @@ import org.gradle.api.GradleException
 
 apply plugin: 'java'
 
-ext.distDir = new File("dist")
 
 task validate(description: 'Validate Build User') {
 	doFirst {
@@ -77,7 +76,19 @@ jar {
 	archiveName = 'MyApp.jar'
 	exclude 'dsi/ext/**'
 }
-task makePackage (description : 'Put files in zip file', type: Zip, dependsOn: [jar,init_distribution]) {
+task copyStuff(type: Copy) {
+	println "resourceDir: " + resourceDir
+	destinationDir distDir
+	println "destinationDir: " + destinationDir
+	from resourcesDir
+	include 'README.txt'
+	include 'picture.png'
+
+	doLast {
+		ant.fixcrlf (eol:"lf", srcdir : destinationDir, includes: 'README.txt')
+	}
+}
+task makePackage (description : 'Put files in zip file', type: Zip, dependsOn: [jar,init_distribution,copyStuff]) {
 	archiveName = "package.zip"
 	def subTasks = tasks.matching( { task -> task.group == 'client_sub_jar' } )
 	from (subTasks)
