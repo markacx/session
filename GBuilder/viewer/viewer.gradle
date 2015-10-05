@@ -63,7 +63,6 @@ task init_server (description: 'Create server sub jar tasks') {
 	)
 }
 compileJava {
-	println "$projectBase/src"
 	source "$projectBase/src"
 	include '**/*.java'
 }
@@ -77,9 +76,7 @@ jar {
 	exclude 'dsi/ext/**'
 }
 task copyStuff(type: Copy) {
-	println "resourceDir: " + resourceDir
 	destinationDir distDir
-	println "destinationDir: " + destinationDir
 	from resourcesDir
 	include 'README.txt'
 	include 'picture.png'
@@ -128,7 +125,6 @@ public void createClientTask(archive,dirs) {
 		from sourceSets.main.output
 
 		includes = dirs
-		includes.each( { println it})
 		exclude "**/server/**"
 		archiveName ="${archive}C.jar"
 		artifacts {
@@ -144,7 +140,6 @@ public void createServerTask(archive,dirs) {
 
 		includes = dirs
 		exclude "**/client/**"
-		includes.each( { println it})
 		archiveName ="${archive}S.jar"
 		artifacts {
 			archives file: new File(buildDir,archiveName), name: archive, type: 'jar', classifier: 'extra'

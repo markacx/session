@@ -1,5 +1,5 @@
 task setupLibs {
-	File libBase = new File(myProjectBase,"GBuilder/resources/libs").absoluteFile
+	File libBase = new File(myRootDirectory,"GBuilder/resources/libs").absoluteFile
 
 	project.ext.libraries = [
 

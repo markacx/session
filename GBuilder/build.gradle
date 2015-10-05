@@ -7,7 +7,7 @@ if (privateFile.exists()) {
 	apply from: 'private.gradle'
 }
 
-ext.myProjectBase = new File(projectDir,'../..').canonicalFile.absolutePath
+ext.myRootDirectory = new File(projectDir,'../..').canonicalFile.absolutePath
 
 if (!hasProperty('distributionBase')) {
 	ext.distributionBase = new File(projectDir,'dist').canonicalFile.absolutePath
@@ -47,27 +47,31 @@ subprojects {
 		manifest {
 			attributes (
 				'ReleaseBuild': isReleaseBuild,
+				//Having BuildDate-input in the config section will force this task run every time.  Instead, put it in doFirst section
+				//'BuildDate-input': System.currentTimeMillis() 
 			)
 		}
 		doFirst {
 			//Doing this prevents a change in the build date from invalidating the jar file and triggering a rebuild
-			manifest.attributes ('BuildDate': buildDate)
+			manifest.attributes ('BuildDate': System.currentTimeMillis())
 		}
 	}
-	afterEvaluate( { Project proj ->
-			if (!proj.tasks.matching( {it.name == 'createDist'}).empty) {
-				if (proj.tasks.matching( {it.name == 'copyToDistribution'}).empty) {
-					proj.task([type: Copy, group : 'Distribution',dependsOn: ':'+proj.name + ':createDist'],"copyToDistribution") {
-						destinationDir = distributionBaseDir
-						from (proj.distBaseDir)
-					}
-				}
-				rootProject.tasks['createDist'].dependsOn += proj.tasks['copyToDistribution']
-			}
-		})
 }
+afterEvaluate( { Project proj ->
+		if (!proj.tasks.matching( {it.name == 'createDist'}).empty) {
+			if (proj.tasks.matching( {it.name == 'copyToDistribution'}).empty) {
+				proj.task([type: Copy, group : 'Distribution',dependsOn: ':'+proj.name + ':createDist'],"copyToDistribution") {
+					destinationDir = distributionBaseDir
+					from (proj.distBaseDir)
+				}
+			}
+			rootProject.tasks['createDist'].dependsOn += proj.tasks['copyToDistribution']
+		}
+	})
 
 project(':viewer') {
-	apply plugin: 'java'
-	ext.projectBase=myProjectBase+'/Viewer'
+	ext.projectBase=myRootDirectory+'/Viewer'
+}
+project(':servlet') {
+	ext.projectBase=myRootDirectory+'/Servlet'
 }

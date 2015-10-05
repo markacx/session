@@ -1,6 +1,6 @@
 rootProject.name = 'GBuilder'
 
-include 'viewer'
+include 'viewer','servlet'
 
 rootProject.children.each {
 	it.buildFileName = it.name + ".gradle"
