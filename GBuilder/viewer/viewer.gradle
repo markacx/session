@@ -102,20 +102,22 @@ task execJava (type: Exec, dependsOn : rePackage_good) {
 	def file = new File(distDir,"version.txt").absoluteFile;
 
 	executable = System.getProperty("java.home") + "/bin/java.exe"
-	//The arguments are considered part of the "inputs"  Add them explicitly if a change in them should re-run the task
-	inputs.property('executable',executable)
+	//The arguments are not considered part of the "inputs"  Add them explicitly if a change in them should re-run the task
+	inputs.property('MyExecutable',executable)
 
 	args "-version"
-	//The arguments are considered part of the "inputs"  Add them explicitly if a change in them should re-run the task
-	inputs.property('args',args)
+	//The arguments are not considered part of the "inputs"  Add them explicitly if a change in them should re-run the task
+	inputs.property('MyArgs',args)
 	errorOutput = new ByteArrayOutputStream()
 	doLast {
 		file.text = errorOutput.toString()
 	}
 	//Without setting an output, the task not have any output and so will run every time
 	outputs.file(file)
+	inputs.files.each ( { println "FILE: " + it } )
+	inputs.properties.each ( { println "PROP: " + it } )
 }
-task doBuild (dependsOn: execJava) {
+task createDist (dependsOn: execJava) {
 	
 }
 

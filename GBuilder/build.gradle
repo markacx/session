@@ -1,3 +1,4 @@
+import org.gradle.api.Project
 description = 'Root project'
 
 logger.quiet("Java version of build: " + System.getProperty("java.version"))
@@ -56,19 +57,22 @@ subprojects {
 			manifest.attributes ('BuildDate': System.currentTimeMillis())
 		}
 	}
-}
-afterEvaluate( { Project proj ->
+
+	afterEvaluate( { Project proj ->
 		if (!proj.tasks.matching( {it.name == 'createDist'}).empty) {
 			if (proj.tasks.matching( {it.name == 'copyToDistribution'}).empty) {
 				proj.task([type: Copy, group : 'Distribution',dependsOn: ':'+proj.name + ':createDist'],"copyToDistribution") {
-					destinationDir = distributionBaseDir
-					from (proj.distBaseDir)
+					destinationDir ( new File(distributionBase) )
+					from (proj.distDir)
 				}
 			}
 			rootProject.tasks['createDist'].dependsOn += proj.tasks['copyToDistribution']
 		}
 	})
-
+}
+task createDist (dependsOn: ":viewer:createDist") {
+	//Do stuff here
+}
 project(':viewer') {
 	ext.projectBase=myRootDirectory+'/Viewer'
 }
