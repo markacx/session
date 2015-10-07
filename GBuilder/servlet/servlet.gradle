@@ -5,6 +5,9 @@ import org.gradle.api.GradleException
 apply plugin: 'java'
 
 
+dependencies {
+	compile libraries.Tomcat
+}
 compileJava {
 	source "$projectBase/src"
 	include '**/*.java'

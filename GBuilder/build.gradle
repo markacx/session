@@ -8,7 +8,7 @@ if (privateFile.exists()) {
 	apply from: 'private.gradle'
 }
 
-ext.myRootDirectory = new File(projectDir,'../..').canonicalFile.absolutePath
+ext.myRootDirectory = new File(projectDir,'..').canonicalFile.absolutePath
 
 if (!hasProperty('distributionBase')) {
 	ext.distributionBase = new File(projectDir,'dist').canonicalFile.absolutePath

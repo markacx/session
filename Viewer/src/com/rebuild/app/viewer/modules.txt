@@ -1,5 +1,5 @@
-com.rebuild.ex.module1.client.Module1
-com.rebuild.ex.module2.client.Module2
-com.rebuild.ex.module2.client.Module3
-com.rebuild.ex.module2.client.Module4
-com.rebuild.ex.module2.client.Module5
+com.rebuild.ext.module1.client.Module1
+com.rebuild.ext.module2.client.Module2
+com.rebuild.ext.module3.client.Module3
+com.rebuild.ext.module4.client.Module4
+com.rebuild.ext.module5.client.Module5

@@ -64,6 +64,7 @@ task init_server (description: 'Create server sub jar tasks') {
 }
 compileJava {
 	source "$projectBase/src"
+	println "$projectBase/src"
 	include '**/*.java'
 }
 processResources {
@@ -114,8 +115,6 @@ task execJava (type: Exec, dependsOn : rePackage_good) {
 	}
 	//Without setting an output, the task not have any output and so will run every time
 	outputs.file(file)
-	inputs.files.each ( { println "FILE: " + it } )
-	inputs.properties.each ( { println "PROP: " + it } )
 }
 task createDist (dependsOn: execJava) {
 	
