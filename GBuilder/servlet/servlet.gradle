@@ -8,6 +8,12 @@ apply plugin: 'java'
 dependencies {
 	compile libraries.Tomcat
 }
+task init_distribution << {
+	distDir.mkdir()
+}
+clean {
+	delete distDir
+}
 compileJava {
 	source "$projectBase/src"
 	include '**/*.java'
@@ -19,4 +25,8 @@ processResources {
 }
 jar {
 	archiveName = 'Servlet.jar'
+}
+task createDist (type: Copy, dependsOn: jar) {
+	from (jar.outputs)
+	into distDir 
 }

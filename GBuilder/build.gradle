@@ -3,6 +3,8 @@ description = 'Root project'
 
 logger.quiet("Java version of build: " + System.getProperty("java.version"))
 
+//If we want to set defaults for our project that our private to us, maybe where our codesign program is, we can put in
+//in this file.  This file, I don't put in version control
 File privateFile = new File(projectDir,'private.gradle')
 if (privateFile.exists()) {
 	apply from: 'private.gradle'
@@ -11,24 +13,19 @@ if (privateFile.exists()) {
 ext.myRootDirectory = new File(projectDir,'..').canonicalFile.absolutePath
 
 if (!hasProperty('distributionBase')) {
+	//We will use the current directory by default, but we can specifiy this in the private.gradle file and not use the default
 	ext.distributionBase = new File(projectDir,'dist').canonicalFile.absolutePath
 }
 ext.isReleaseBuild = "true".equals(isReleaseBuildText.toLowerCase())
 ext.resourcesDir = new File(projectDir,'resources')
 
 apply from: 'lib-def.gradle'
-if (!hasProperty('buildDate')) {
-	ext.buildDate = new Date().format('MM/dd/yyyy HH:mm:ss')
-}
 
 logger.quiet "Base = ${distributionBase}"
 
 subprojects {
 	ext.distDir = new File(projectDir,'dist')
 	ext.resourceDir = resourcesDir
-	
-	println "BASE: " + distDir
-	println "resourceDir: " + resourceDir
 	
 	tasks.withType(JavaCompile) {
 		options.incremental = true
@@ -48,13 +45,13 @@ subprojects {
 		manifest {
 			attributes (
 				'ReleaseBuild': isReleaseBuild,
-				//Having BuildDate-input in the config section will force this task run every time.  Instead, put it in doFirst section
-				//'BuildDate-input': System.currentTimeMillis() 
+				//Having BuildTime in the config section will force this task run every time.  Instead, put it in doFirst section
+				//'BuildTime': System.currentTimeMillis() 
 			)
 		}
 		doFirst {
 			//Doing this prevents a change in the build date from invalidating the jar file and triggering a rebuild
-			manifest.attributes ('BuildDate': System.currentTimeMillis())
+			manifest.attributes ('BuildTime': System.currentTimeMillis())
 		}
 	}
 
@@ -64,14 +61,20 @@ subprojects {
 				proj.task([type: Copy, group : 'Distribution',dependsOn: ':'+proj.name + ':createDist'],"copyToDistribution") {
 					destinationDir ( new File(distributionBase) )
 					from (proj.distDir)
+					doLast {
+						println "'Default' copyToDistribution task in ${project.name}"
+					}
 				}
 			}
 			rootProject.tasks['createDist'].dependsOn += proj.tasks['copyToDistribution']
 		}
 	})
 }
-task createDist (dependsOn: ":viewer:createDist") {
-	//Do stuff here
+task clean {
+	delete new File(distributionBase)
+}
+task createDist (dependsOn: [':viewer:createDist',':servlet:createDist']) {
+
 }
 project(':viewer') {
 	ext.projectBase=myRootDirectory+'/Viewer'

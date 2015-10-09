@@ -4,7 +4,6 @@ import org.gradle.api.GradleException
 
 apply plugin: 'java'
 
-
 task validate(description: 'Validate Build User') {
 	doFirst {
 		//this will open a SSH configuration dialog, in Pure JavaFX.
@@ -29,34 +28,42 @@ task validate(description: 'Validate Build User') {
 task init_distribution << {
 	distDir.mkdir()
 }
-
+clean {
+	delete distDir
+}
+//This would not have to be a task.  The createClientTask lines could just be part of the script, but this helps
+//me keep everything in order
 task init_client (description: 'Create client sub jar tasks') {
 	createClientTask('Module1',['com/rebuild/ext/module1/**'])
 	createClientTask('Module2',['com/rebuild/ext/module2/**'])
 	createClientTask('Module3',['com/rebuild/ext/module3/**'])
-	createClientTask('Module4',['com/rebuild/ext/module4/**'])
-	createClientTask('Module5',['com/rebuild/ext/module5/**'])
+	//If modules 4 and 5 are so tied together that they can be bundled as one, we can do this too
+	createClientTask('Module4n5',['com/rebuild/ext/module4/**','com/rebuild/ext/module5/**'])
 
+	//We want to make sure these new tasks are executed.  To do that, we need something to depend on them
+	//Find all the tasks in the project, find the ones we just created, and make the are class depend on these being done
 	tasks.each( {
 			logger.info("Examining task " + it)
 			if (it.group == 'client_sub_jar') {
-				jar.dependsOn = jar.dependsOn + it 
+				jar.dependsOn += it 
 				logger.info("Adding" + it)
 			}
 		}
 	)
 }
+//This would not have to be a task.  The createServerTask lines could just be part of the script, but this helps
+//me keep everything in order
 task init_server (description: 'Create server sub jar tasks') {
 	createServerTask('Module1',['com/rebuild/ext/module1/**'])
 	createServerTask('Module2',['com/rebuild/ext/module2/**'])
 	createServerTask('Module3',['com/rebuild/ext/module3/**'])
-	createServerTask('Module4',['com/rebuild/ext/module4/**'])
-	createServerTask('Module5',['com/rebuild/ext/module5/**'])
+	//If modules 4 and 5 are so tied together that they can be bundled as one, we can do this too
+	createServerTask('Module4n5',['com/rebuild/ext/module4/**','com/rebuild/ext/module5/**'])
 
 	tasks.each( {
 			logger.info("Examining task " + it)
 			if (it.group == 'server_sub_jar') {
-				jar.dependsOn = jar.dependsOn + it 
+				jar.dependsOn += it 
 				logger.info("Adding" + it)
 			}
 		}
@@ -64,17 +71,17 @@ task init_server (description: 'Create server sub jar tasks') {
 }
 compileJava {
 	source "$projectBase/src"
-	println "$projectBase/src"
 	include '**/*.java'
 }
 processResources {
 	from "$projectBase/src"
-
 	exclude '**/*.java'
 }
 jar {
 	archiveName = 'MyApp.jar'
-	exclude 'dsi/ext/**'
+	//The module files are in other jar files, so exclude them from this one
+	include 'com/rebuild/app/viewer/**'
+	include 'com/rebuild/client/**'
 }
 task copyStuff(type: Copy) {
 	destinationDir distDir
@@ -102,27 +109,37 @@ task rePackage_good (type : Copy, description : 'Do something to the zip file', 
 task execJava (type: Exec, dependsOn : rePackage_good) {
 	def file = new File(distDir,"version.txt").absoluteFile;
 
-	executable = System.getProperty("java.home") + "/bin/java.exe"
-	//The arguments are not considered part of the "inputs"  Add them explicitly if a change in them should re-run the task
-	inputs.property('MyExecutable',executable)
-
+	executable System.getProperty("java.home") + "/bin/java.exe"
 	args "-version"
-	//The arguments are not considered part of the "inputs"  Add them explicitly if a change in them should re-run the task
+	
+	//The arguments and executable are not considered part of the "inputs"  
+	//Add them explicitly if a change in them should re-run the task
 	inputs.property('MyArgs',args)
-	errorOutput = new ByteArrayOutputStream()
+	inputs.property('MyExecutable',executable)
+	
+	//Without setting an output, the task not have any output and so will run every time
+	outputs.file(file)
+	
+	doFirst {
+		//Running java with the -version option outputs the the version information to standard error
+		errorOutput new ByteArrayOutputStream()
+	}
 	doLast {
 		file.text = errorOutput.toString()
 	}
-	//Without setting an output, the task not have any output and so will run every time
-	outputs.file(file)
 }
 task createDist (dependsOn: execJava) {
 	
 }
 
+task copyBigFile << {
+	println "Copying big file"
+}
+task copyToDistribution (dependsOn: copyBigFile) << {
+	println "'Overridden' copyToDistribution task in ${project.name}"
+}
 public void createClientTask(archive,dirs) {
 	task([type: Jar, group : 'client_sub_jar', dependsOn:"compileJava"],"create_viewer_" + archive) {
-		//Not sure why, but it is necessary to include the source set
 		from sourceSets.main.output
 
 		includes = dirs
@@ -136,7 +153,6 @@ public void createClientTask(archive,dirs) {
 }
 public void createServerTask(archive,dirs) {
 	task([type: Jar, group : 'server_sub_jar', dependsOn:"compileJava"],"create_server_" + archive) {
-		//Not sure why, but it is necessary to include the source set
 		from sourceSets.main.output
 
 		includes = dirs
