@@ -59,8 +59,8 @@ subprojects {
 		if (!proj.tasks.matching( {it.name == 'createDist'}).empty) {
 			if (proj.tasks.matching( {it.name == 'copyToDistribution'}).empty) {
 				proj.task([type: Copy, group : 'Distribution',dependsOn: ':'+proj.name + ':createDist'],"copyToDistribution") {
-					destinationDir ( new File(distributionBase) )
-					from (proj.distDir)
+					from proj.distDir
+					into new File(distributionBase)
 					doLast {
 						println "'Default' copyToDistribution task in ${project.name}"
 					}

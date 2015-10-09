@@ -100,22 +100,8 @@ task copyStuff(type: Copy) {
 		ant.fixcrlf (eol:"lf", srcdir : destinationDir, includes: 'README.txt')
 	}
 }
-task makePackage (description : 'Put files in zip file', type: Zip, dependsOn: [jar,init_distribution,copyStuff,'execJava']) {
-	archiveName = "package.zip"
-	def subTasks = tasks.matching( { task -> task.group == 'client_sub_jar' } )
-	from subTasks
-}
-//This rename moves the file from the output of makePackage, forcing it to re-run every time
-task rePackage_bad (description : 'Do something to the zip file', dependsOn: makePackage) {
-	def org = makePackage.outputs.getFiles()[0];
-	org.renameTo(packageDir)
-} 
-task rePackage (type : Copy, description : 'Do something to the zip file', dependsOn: makePackage) {
-	from makePackage
-	into packageDir
-} 
 task execJava (type: Exec, dependsOn : [compileJava,init_distribution]) {
-	def file = new File(packageDir,"version.txt").absoluteFile;
+	def file = new File(packageDir,"version.txt")
 	println "PACKAGE: "+ packageDir
 	executable System.getProperty("java.home") + "/bin/java.exe"
 	args "-version"
@@ -136,8 +122,22 @@ task execJava (type: Exec, dependsOn : [compileJava,init_distribution]) {
 		file.text = errorOutput.toString()
 	}
 }
-task createDist (type: Copy, dependsOn: [execJava,jar,rePackage]) {
-	from rePackage
+task makePackage (description : 'Put files in zip file', type: Zip, dependsOn: [jar,init_distribution,copyStuff,execJava]) {
+	archiveName = "package.zip"
+	def subTasks = tasks.matching( { task -> task.group == 'client_sub_jar' } )
+	from subTasks
+}
+//This rename moves the file from the output of makePackage, forcing it to re-run every time
+task copyPackage_bad (description : 'Do something to the zip file', dependsOn: makePackage) {
+	def org = makePackage.outputs.getFiles()[0];
+	org.renameTo(packageDir)
+} 
+task copyPackage (type : Copy, description : 'Do something to the zip file', dependsOn: makePackage) {
+	from makePackage
+	into packageDir
+} 
+task createDist (type: Copy, dependsOn: [execJava,jar,copyPackage]) {
+	from copyPackage
 	into distDir
 }
 
