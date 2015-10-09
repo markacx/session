@@ -17,3 +17,6 @@
 /GBuilder/buildSrc/build/
 /Viewer/nbproject/private/
 /GBuilder/dist/
+/GBuilder/viewer/copyDir/
+/GBuilder/viewer/packageDir/
+/GBuilder/servlet/dist/

@@ -4,6 +4,9 @@ import org.gradle.api.GradleException
 
 apply plugin: 'java'
 
+File copyDir = new File(projectDir,'copyDir')
+File packageDir = new File(projectDir,'packageDir')
+
 task validate(description: 'Validate Build User') {
 	doFirst {
 		//this will open a SSH configuration dialog, in Pure JavaFX.
@@ -27,9 +30,13 @@ task validate(description: 'Validate Build User') {
 }
 task init_distribution << {
 	distDir.mkdir()
+	copyDir.mkdir()
+	packageDir.mkdir()
 }
 clean {
 	delete distDir
+	delete copyDir
+	delete packageDir
 }
 //This would not have to be a task.  The createClientTask lines could just be part of the script, but this helps
 //me keep everything in order
@@ -84,8 +91,8 @@ jar {
 	include 'com/rebuild/client/**'
 }
 task copyStuff(type: Copy) {
-	destinationDir distDir
 	from resourcesDir
+	into copyDir
 	include 'README.txt'
 	include 'picture.png'
 
@@ -93,22 +100,23 @@ task copyStuff(type: Copy) {
 		ant.fixcrlf (eol:"lf", srcdir : destinationDir, includes: 'README.txt')
 	}
 }
-task makePackage (description : 'Put files in zip file', type: Zip, dependsOn: [jar,init_distribution,copyStuff]) {
+task makePackage (description : 'Put files in zip file', type: Zip, dependsOn: [jar,init_distribution,copyStuff,'execJava']) {
 	archiveName = "package.zip"
 	def subTasks = tasks.matching( { task -> task.group == 'client_sub_jar' } )
-	from (subTasks)
+	from subTasks
 }
-task rePackage_bad (description : 'Do something to the zip file', dependsOn: [makePackage]) << {
+//This rename moves the file from the output of makePackage, forcing it to re-run every time
+task rePackage_bad (description : 'Do something to the zip file', dependsOn: makePackage) {
 	def org = makePackage.outputs.getFiles()[0];
-	org.renameTo(distDir)
+	org.renameTo(packageDir)
 } 
-task rePackage_good (type : Copy, description : 'Do something to the zip file', dependsOn: [makePackage]) << {
-	from makePackage.outputs
-	into distDir
+task rePackage (type : Copy, description : 'Do something to the zip file', dependsOn: makePackage) {
+	from makePackage
+	into packageDir
 } 
-task execJava (type: Exec, dependsOn : rePackage_good) {
-	def file = new File(distDir,"version.txt").absoluteFile;
-
+task execJava (type: Exec, dependsOn : [compileJava,init_distribution]) {
+	def file = new File(packageDir,"version.txt").absoluteFile;
+	println "PACKAGE: "+ packageDir
 	executable System.getProperty("java.home") + "/bin/java.exe"
 	args "-version"
 	
@@ -128,15 +136,20 @@ task execJava (type: Exec, dependsOn : rePackage_good) {
 		file.text = errorOutput.toString()
 	}
 }
-task createDist (dependsOn: execJava) {
-	
+task createDist (type: Copy, dependsOn: [execJava,jar,rePackage]) {
+	from rePackage
+	into distDir
 }
 
 task copyBigFile << {
 	println "Copying big file"
 }
-task copyToDistribution (dependsOn: copyBigFile) << {
-	println "'Overridden' copyToDistribution task in ${project.name}"
+task copyToDistribution (type: Copy, dependsOn: [copyBigFile, createDist]) {
+	from createDist
+	into new File(rootProject.distributionBase)
+	doLast {
+		println "'Overridden' copyToDistribution task in ${project.name}"
+	}
 }
 public void createClientTask(archive,dirs) {
 	task([type: Jar, group : 'client_sub_jar', dependsOn:"compileJava"],"create_viewer_" + archive) {
