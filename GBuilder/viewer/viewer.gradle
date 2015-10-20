@@ -1,10 +1,15 @@
+//Example project to go along with JavaOne 2015 conference session CON3374
+//To run full build, install gradle.  Then, with the gradle binary in your
+//systen PATH, run gradle createDist
+//
+
 import net.ocie.javaone2015.build.fx.*
 import net.ocie.javaone2015.build.validation.*
 import org.gradle.api.GradleException
 
 apply plugin: 'java'
 
-File copyDir = new File(projectDir,'copyDir')
+File copyDir = new File(projectDir,'copyDirectory')
 File packageDir = new File(projectDir,'packageDir')
 
 task validate(description: 'Validate Build User') {
@@ -85,7 +90,7 @@ processResources {
 	exclude '**/*.java'
 }
 jar {
-	archiveName = 'MyApp.jar'
+	archiveName 'MyApp.jar'
 	//The module files are in other jar files, so exclude them from this one
 	include 'com/rebuild/app/viewer/**'
 	include 'com/rebuild/client/**'
@@ -95,7 +100,7 @@ task copyStuff(type: Copy) {
 	into copyDir
 	include 'README.txt'
 	include 'picture.png'
-
+	println 'Hello World'
 	doLast {
 		ant.fixcrlf (eol:"lf", srcdir : destinationDir, includes: 'README.txt')
 	}
@@ -123,7 +128,7 @@ task execJava (type: Exec, dependsOn : [compileJava,init_distribution]) {
 	}
 }
 task makePackage (description : 'Put files in zip file', type: Zip, dependsOn: [jar,init_distribution,copyStuff,execJava]) {
-	archiveName = "package.zip"
+	archiveName "package.zip"
 	def subTasks = tasks.matching( { task -> task.group == 'client_sub_jar' } )
 	from subTasks
 }
@@ -148,16 +153,16 @@ task copyToDistribution (type: Copy, dependsOn: [copyBigFile, createDist]) {
 	from createDist
 	into new File(rootProject.distributionBase)
 	doLast {
-		println "'Overridden' copyToDistribution task in ${project.name}"
+		println "'Overridden' copyToDistribution task in project ${project.name}"
 	}
 }
 public void createClientTask(archive,dirs) {
 	task([type: Jar, group : 'client_sub_jar', dependsOn:"compileJava"],"create_viewer_" + archive) {
 		from sourceSets.main.output
 
-		includes = dirs
+		include dirs
 		exclude "**/server/**"
-		archiveName ="${archive}C.jar"
+		archiveName "${archive}C.jar"
 		artifacts {
 			archives file: new File(buildDir,archiveName), name: archive, type: 'jar', classifier: 'extra'
 		}
@@ -168,9 +173,9 @@ public void createServerTask(archive,dirs) {
 	task([type: Jar, group : 'server_sub_jar', dependsOn:"compileJava"],"create_server_" + archive) {
 		from sourceSets.main.output
 
-		includes = dirs
+		include dirs
 		exclude "**/client/**"
-		archiveName ="${archive}S.jar"
+		archiveName "${archive}S.jar"
 		artifacts {
 			archives file: new File(buildDir,archiveName), name: archive, type: 'jar', classifier: 'extra'
 		}

@@ -62,10 +62,11 @@ subprojects {
 					from proj.distDir
 					into new File(distributionBase)
 					doLast {
-						println "'Default' copyToDistribution task in ${project.name}"
+						println "'Default' copyToDistribution task in project ${project.name}"
 					}
 				}
 			}
+			rootProject.tasks['createDist'].dependsOn += proj.tasks['createDist']
 			rootProject.tasks['createDist'].dependsOn += proj.tasks['copyToDistribution']
 		}
 	})
