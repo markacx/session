@@ -71,10 +71,23 @@ subprojects {
 		}
 	})
 }
-task clean {
-	delete new File(distributionBase)
+//This will never copy anything because the "configuration" is in the doLast section ( "<<" means doLast)
+task justForShow (type: Copy) << {
+	println "Just for show"
+	from resourcesDir
+	into distributionBase
+	include "MyShowFile.txt"
 }
-task createDist (dependsOn: [':viewer:createDist',':servlet:createDist']) {
+//clean is defined in the Java plugin, but not in this file, so we just create a new task called 'clean' here
+//Note, that in the viewer.gradle file, which uses the Java plugin, we do our delete in the configure action.
+//Here, this is going to extend from default action, meaning that a delete called here will actual do the delete.
+//Therefore, we put the delete in a doLast action
+task clean {
+	doLast {
+		delete distributionBase
+	}
+}
+task createDist (dependsOn: [':viewer:createDist',':servlet:createDist',justForShow]) {
 
 }
 project(':viewer') {

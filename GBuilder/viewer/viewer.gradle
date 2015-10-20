@@ -9,8 +9,8 @@ import org.gradle.api.GradleException
 
 apply plugin: 'java'
 
-File copyDir = new File(projectDir,'copyDirectory')
-File packageDir = new File(projectDir,'packageDir')
+File copyDir = new File(distDir,'copyDirectory')
+File packageDir = new File(distDir,'packageDirectory')
 
 task validate(description: 'Validate Build User') {
 	doFirst {
@@ -38,6 +38,7 @@ task init_distribution << {
 	copyDir.mkdir()
 	packageDir.mkdir()
 }
+//
 clean {
 	delete distDir
 	delete copyDir
@@ -141,17 +142,27 @@ task copyPackage (type : Copy, description : 'Do something to the zip file', dep
 	from makePackage
 	into packageDir
 } 
-task createDist (type: Copy, dependsOn: [execJava,jar,copyPackage]) {
-	from copyPackage
+task createDist (type: Copy, dependsOn: [execJava,jar,copyPackage,copyStuff]) {
+	from resourceDir
 	into distDir
+	include "ViewerDistribution.txt"
 }
 
-task copyBigFile << {
-	println "Copying big file"
-}
-task copyToDistribution (type: Copy, dependsOn: [copyBigFile, createDist]) {
-	from createDist
+task copyPackageToDistribution(type: Copy, dependsOn: createDist) {
+	from distDir
 	into new File(rootProject.distributionBase)
+	include "$packageDir.name/**"
+}
+task copyOtherToDistribution(type: Copy, dependsOn: createDist) {
+	from distDir
+	into new File(rootProject.distributionBase)
+	include "$copyDir.name/**"
+}
+task copyToDistribution (type: Copy, dependsOn: [createDist,copyPackageToDistribution,copyOtherToDistribution]) {
+	from distDir
+	into new File(rootProject.distributionBase)
+	exclude "$copyDir.name/**"
+	exclude "$packageDir.name/**"
 	doLast {
 		println "'Overridden' copyToDistribution task in project ${project.name}"
 	}

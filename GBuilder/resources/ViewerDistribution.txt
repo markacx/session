@@ -1,0 +1,1 @@
+A random file to include in the viewer distribution
