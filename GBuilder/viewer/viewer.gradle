@@ -1,6 +1,6 @@
 //Example project to go along with JavaOne 2015 conference session CON3374
 //To run full build, install gradle.  Then, with the gradle binary in your
-//systen PATH, run gradle createDist
+//systenm PATH, run gradle createDist
 //
 
 import net.ocie.javaone2015.build.fx.*
@@ -33,12 +33,15 @@ task validate(description: 'Validate Build User') {
 		}		
 	}
 }
+//Using << means to put the code in braces in the doLast action.  If this task gets edited to have a type,
+//make sure you removed this so you can configure the task
 task init_distribution << {
 	distDir.mkdir()
 	copyDir.mkdir()
 	packageDir.mkdir()
 }
-//
+//This will configure the clean action in the Java plugin.  Add some additional steps to clean the things we
+//make in the init_distribution
 clean {
 	delete distDir
 	delete copyDir
@@ -82,14 +85,18 @@ task init_server (description: 'Create server sub jar tasks') {
 		}
 	)
 }
+//Just include the .java files, that way a resouces in this structure won't be considered as inputs that might
+//force a recompile
 compileJava {
 	source "$projectBase/src"
 	include '**/*.java'
 }
+//Resources would be everything that isn't a .java file
 processResources {
 	from "$projectBase/src"
 	exclude '**/*.java'
 }
+//Configure the jar task from the Java plugin to not include the files in the modules
 jar {
 	archiveName 'MyApp.jar'
 	//The module files are in other jar files, so exclude them from this one
@@ -108,7 +115,6 @@ task copyStuff(type: Copy) {
 }
 task execJava (type: Exec, dependsOn : [compileJava,init_distribution]) {
 	def file = new File(packageDir,"version.txt")
-	println "PACKAGE: "+ packageDir
 	executable System.getProperty("java.home") + "/bin/java.exe"
 	args "-version"
 	
@@ -158,6 +164,7 @@ task copyOtherToDistribution(type: Copy, dependsOn: createDist) {
 	into new File(rootProject.distributionBase)
 	include "$copyDir.name/**"
 }
+//Make this depend on the fine-grained tasks so one change doesn't require re-copying everything
 task copyToDistribution (type: Copy, dependsOn: [createDist,copyPackageToDistribution,copyOtherToDistribution]) {
 	from distDir
 	into new File(rootProject.distributionBase)
@@ -167,7 +174,7 @@ task copyToDistribution (type: Copy, dependsOn: [createDist,copyPackageToDistrib
 		println "'Overridden' copyToDistribution task in project ${project.name}"
 	}
 }
-public void createClientTask(archive,dirs) {
+void createClientTask(archive,dirs) {
 	task([type: Jar, group : 'client_sub_jar', dependsOn:"compileJava"],"create_viewer_" + archive) {
 		from sourceSets.main.output
 
@@ -180,7 +187,7 @@ public void createClientTask(archive,dirs) {
 	}
 	tasks.jar.dependsOn += "create_viewer_" + archive
 }
-public void createServerTask(archive,dirs) {
+void createServerTask(archive,dirs) {
 	task([type: Jar, group : 'server_sub_jar', dependsOn:"compileJava"],"create_server_" + archive) {
 		from sourceSets.main.output
 

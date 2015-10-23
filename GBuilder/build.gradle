@@ -4,7 +4,7 @@ description = 'Root project'
 logger.quiet("Java version of build: " + System.getProperty("java.version"))
 
 //If we want to set defaults for our project that our private to us, maybe where our codesign program is, we can put in
-//in this file.  This file, I don't put in version control
+//in this file.  I don't put the private.gradle in version control.
 File privateFile = new File(projectDir,'private.gradle')
 if (privateFile.exists()) {
 	apply from: 'private.gradle'
@@ -27,6 +27,7 @@ subprojects {
 	ext.distDir = new File(projectDir,'dist')
 	ext.resourceDir = resourcesDir
 	
+	//Find all tasks that have a compile step, and configure the compiler how we want
 	tasks.withType(JavaCompile) {
 		options.incremental = true
 		options.warnings = false
@@ -36,6 +37,7 @@ subprojects {
 			memoryMaximumSize = "512M"
 		}
 	}
+	//Find all tasks that have a Jar task, and configure the jar how we want
 	tasks.withType(Jar) {
 		metaInf {
 			from (resourcesDir) {
@@ -54,7 +56,7 @@ subprojects {
 			manifest.attributes ('BuildTime': System.currentTimeMillis())
 		}
 	}
-
+	//After everything has "evaluated" create a copyToDistribution task if there is not already one.
 	afterEvaluate( { Project proj ->
 		if (!proj.tasks.matching( {it.name == 'createDist'}).empty) {
 			if (proj.tasks.matching( {it.name == 'copyToDistribution'}).empty) {
@@ -66,12 +68,15 @@ subprojects {
 					}
 				}
 			}
+			//Whether or not we created a task or not, if the project has a "createDist" task, make sure the root project's
+			//"createDist" task depends on it, so we are sure it gets executed
 			rootProject.tasks['createDist'].dependsOn += proj.tasks['createDist']
 			rootProject.tasks['createDist'].dependsOn += proj.tasks['copyToDistribution']
 		}
 	})
 }
 //This will never copy anything because the "configuration" is in the doLast section ( "<<" means doLast)
+//To fix, remove the "<<"
 task justForShow (type: Copy) << {
 	println "Just for show"
 	from resourcesDir

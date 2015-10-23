@@ -4,7 +4,6 @@ import org.gradle.api.GradleException
 
 apply plugin: 'java'
 
-
 dependencies {
 	compile libraries.Tomcat
 }
