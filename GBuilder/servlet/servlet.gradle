@@ -1,7 +1,5 @@
-import net.ocie.javaone2015.build.fx.*
-import net.ocie.javaone2015.build.validation.*
-import org.gradle.api.GradleException
-
+// Sevlet Project servlet.gradle
+ 
 apply plugin: 'java'
 
 dependencies {

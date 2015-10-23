@@ -1,4 +1,11 @@
+//Example project to go along with JavaOne 2015 conference session CON3374
+//To run full build, install gradle.  Then, with the gradle binary in your
+//system PATH, run gradle createDist
+//
+// Root Project build.gradle
+
 import org.gradle.api.Project
+
 description = 'Root project'
 
 logger.quiet("Java version of build: " + System.getProperty("java.version"))

@@ -1,7 +1,4 @@
-//Example project to go along with JavaOne 2015 conference session CON3374
-//To run full build, install gradle.  Then, with the gradle binary in your
-//systenm PATH, run gradle createDist
-//
+// Viewer Project viewer.gradle
 
 import net.ocie.javaone2015.build.fx.*
 import net.ocie.javaone2015.build.validation.*
